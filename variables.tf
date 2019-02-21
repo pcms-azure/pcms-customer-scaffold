@@ -1,0 +1,28 @@
+variable "project" {
+    type        = "string"
+    description = "PCMS project identifier, e.g. prod, non-prod."
+}
+
+variable "loc" {
+    type        = "string"
+    default     = "westeurope"
+    description = "Azure region shortname."
+}
+
+variable "address_space" {
+    type        = "list"
+    default     = [ "10.0.0.0/22" ]
+    description = "List of vnet address spaces"
+}
+
+variable "bgp" {
+    type        = "boolean"
+    default     = false
+    description = "Configure whether VPN gateway will use BGP. (Default: false)"
+}
+
+variable "aa" {
+    type        = "boolean"
+    default     = false
+    description = "Configure whether VPN gateway will be configured as active-active. (Default: false)"
+}
