@@ -6,11 +6,12 @@ resource "azurerm_resource_group" "core" {
 
 locals {
   primaryiprange  = "${element(var.address_space, 0)}"
-  newbits         = "${element(split("/", local.primaryiprange ), 1)}"
+  primarycidr     = "${element(split("/", local.primaryiprange ), 1)}"
+  newbits         = "${max(0, 28 - local.primarycidr)}"
 }
 
-resource "azurerm_virtual_network" "core" {
-  name                = "core"
+resource "azurerm_virtual_network" "customer" {
+  name                = "${var.project}-vnet"
   location            = "${azurerm_resource_group.core.location}"
   tags                = "${azurerm_resource_group.core.tags}"
   resource_group_name = "${azurerm_resource_group.core.name}"
@@ -21,13 +22,12 @@ resource "azurerm_virtual_network" "core" {
 resource "azurerm_subnet" "gw" {
   name                 = "GatewaySubnet"
   resource_group_name  = "${azurerm_resource_group.core.name}"
-  tags                 = "${azurerm_resource_group.core.tags}"
-  virtual_network_name = "${azurerm_virtual_network.core.name}"
-  address_prefix       = "${cidrsubnet(local.primaryiprange, local.newbits, -1)}"
+  virtual_network_name = "${azurerm_virtual_network.customer.name}"
+  address_prefix       = "${cidrsubnet(local.primaryiprange, local.newbits, 1)}"
 }
 
-resource "azurerm_public_ip" "core" {
-  name                = "core"
+resource "azurerm_public_ip" "vpnpip" {
+  name                = "${var.project}-vpnpip"
   location            = "${azurerm_resource_group.core.location}"
   tags                = "${azurerm_resource_group.core.tags}"
   resource_group_name = "${azurerm_resource_group.core.name}"
@@ -35,8 +35,12 @@ resource "azurerm_public_ip" "core" {
   allocation_method = "Dynamic"
 }
 
-/*
-resource "azurerm_virtual_network_gateway" "core" {
+data "azurerm_public_ip" "vpnip" {
+  name                = "${azurerm_public_ip.vpnpip.name}"
+  resource_group_name = "${azurerm_resource_group.core.name}"
+}
+
+resource "azurerm_virtual_network_gateway" "vpngw" {
   name                = "${var.project}-vpngw"
   location            = "${azurerm_resource_group.core.location}"
   tags                = "${azurerm_resource_group.core.tags}"
@@ -51,9 +55,8 @@ resource "azurerm_virtual_network_gateway" "core" {
 
   ip_configuration {
     name                          = "vnetGatewayConfig"
-    public_ip_address_id          = "${azurerm_public_ip.core.id}"
+    public_ip_address_id          = "${azurerm_public_ip.vpnpip.id}"
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = "${azurerm_subnet.core.id}"
+    subnet_id                     = "${azurerm_subnet.gw.id}"
   }
 }
-*/
