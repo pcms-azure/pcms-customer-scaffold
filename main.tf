@@ -23,7 +23,7 @@ resource "azurerm_subnet" "gw" {
   resource_group_name  = "${azurerm_resource_group.core.name}"
   tags                 = "${azurerm_resource_group.core.tags}"
   virtual_network_name = "${azurerm_virtual_network.core.name}"
-  address_prefix       = "${cidrsubnet(locals.primaryiprange, locals.newbits, -1)}"
+  address_prefix       = "${cidrsubnet(local.primaryiprange, local.newbits, -1)}"
 }
 
 resource "azurerm_public_ip" "core" {
