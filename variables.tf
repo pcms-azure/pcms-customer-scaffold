@@ -1,6 +1,6 @@
 variable "project" {
     type        = "string"
-    description = "PCMS project identifier, e.g. prod, non-prod."
+    description = "PCMS project identifier, e.g. pcms-<customername>-non-prod*"
 }
 
 variable "loc" {
