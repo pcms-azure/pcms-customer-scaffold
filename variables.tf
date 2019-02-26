@@ -1,5 +1,6 @@
 variable "project" {
     type        = "string"
+    default     = "pcms-contoso-non-prod"
     description = "PCMS project identifier, e.g. pcms-<customername>-non-prod*"
 }
 
