@@ -1,0 +1,66 @@
+{
+  "builders": [{
+    "type": "azure-arm",
+
+    "client_id": "2a00c541-f790-4ec1-8360-fc0d2dc10173",
+    "client_secret": "9f0128b8-ba52-4858-bd07-2a3fb96430d4",
+    "tenant_id": "f246eeb7-b820-4971-a083-9e100e084ed0",
+    "subscription_id": "2d31be49-d959-4415-bb65-8aec2c90ba62",
+
+    "managed_image_resource_group_name": "packer_images",
+    "managed_image_name": "configManagementVm",
+
+    "os_type": "Linux",
+    "image_publisher": "Canonical",
+    "image_offer": "UbuntuServer",
+    "image_sku": "16.04-LTS",
+
+    "azure_tags": {
+        "dept": "Testing",
+        "task": "Image Deployment"
+    },
+
+    "location": "West Europe",
+    "vm_size": "Standard_B1s"
+  }],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "apt-add-repository -y ppa:ansible/ansible",
+        "apt-get update",
+        "apt-get install -y libssl-dev libffi-dev python-dev python-pip",
+        "apt-get upgrade -y",
+        "pip install ansible[azure]"
+      ],
+      "inline_shebang": "/bin/sh -x",
+      "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'"
+    },
+    {
+      "type": "file",
+      "source": "./credentials",
+      "destination": "/tmp/credentials"
+    },
+    {
+      "type": "shell",
+      "inline": [
+	"test -d ~/.azure || mkdir -m 700 ~/.azure",
+        "chmod 600 /tmp/credentials && mv /tmp/credentials ~/.azure/credentials"
+      ],
+      "inline_shebang": "/bin/sh -x",
+      "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'"
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "configManagementVm.yaml" 
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+      ],
+      "inline_shebang": "/bin/sh -x",
+      "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'"
+    }
+  ]
+}
